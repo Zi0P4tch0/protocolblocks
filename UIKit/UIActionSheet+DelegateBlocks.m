@@ -31,34 +31,48 @@ static NSString* UIActionSheetDelegateBlocksKey = @"UIActionSheetDelegateBlocksK
 @implementation UIActionSheet (DelegateBlocks)
 
 -(id)useBlocksForDelegate {
-    UIActionSheetDelegateBlocks* delegate = [[UIActionSheetDelegateBlocks alloc] init];
-    objc_setAssociatedObject (self, &UIActionSheetDelegateBlocksKey, delegate, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    self.delegate = delegate;
+    self.delegate = [self blockDelegate];
     return self;
 }
 
+-(id)blockDelegate {
+    id blockDelegate = objc_getAssociatedObject(self, &UIActionSheetDelegateBlocksKey);
+    if (!blockDelegate) {
+        UIActionSheetDelegateBlocks* delegate = [[UIActionSheetDelegateBlocks alloc] init];
+        blockDelegate = delegate;
+        objc_setAssociatedObject (self, &UIActionSheetDelegateBlocksKey, delegate, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return blockDelegate;
+}
+
 -(void)onClickedButtonAtIndex:(UIActionSheetClickedButtonAtIndexBlock)block {
-    [((UIActionSheetDelegateBlocks*)self.delegate) setClickedButtonAtIndexBlock:block];
+    [((UIActionSheetDelegateBlocks*)[self blockDelegate]) setClickedButtonAtIndexBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onDidDismissWithButtonIndex:(UIActionSheetDidDismissWithButtonIndexBlock)block {
-    [((UIActionSheetDelegateBlocks*)self.delegate) setDidDismissWithButtonIndexBlock:block];
+    [((UIActionSheetDelegateBlocks*)[self blockDelegate]) setDidDismissWithButtonIndexBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onWillDismissWithButtonIndex:(UIActionSheetWillDismissWithButtonIndexBlock)block {
-    [((UIActionSheetDelegateBlocks*)self.delegate) setWillDismissWithButtonIndexBlock:block];
+    [((UIActionSheetDelegateBlocks*)[self blockDelegate]) setWillDismissWithButtonIndexBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onCancel:(UIActionSheetCancelBlock)block {
-    [((UIActionSheetDelegateBlocks*)self.delegate) setCancelBlock:block];
+    [((UIActionSheetDelegateBlocks*)[self blockDelegate]) setCancelBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onDidPresentActionSheet:(UIActionSheetDidPresentActionSheetBlock)block {
-    [((UIActionSheetDelegateBlocks*)self.delegate) setDidPresentActionSheetBlock:block];
+    [((UIActionSheetDelegateBlocks*)[self blockDelegate]) setDidPresentActionSheetBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onWillPresentActionSheet:(UIActionSheetWillPresentActionSheetBlock)block {
-    [((UIActionSheetDelegateBlocks*)self.delegate) setWillPresentActionSheetBlock:block];
+    [((UIActionSheetDelegateBlocks*)[self blockDelegate]) setWillPresentActionSheetBlock:block];
+    [self useBlocksForDelegate];
 }
 
 @end
@@ -73,9 +87,9 @@ static NSString* UIActionSheetDelegateBlocksKey = @"UIActionSheetDelegateBlocksK
 @synthesize willPresentActionSheetBlock = _willPresentActionSheetBlock;
 
 -(BOOL)respondsToSelector:(SEL)aSelector {
-    if ( sel_isEqual(aSelector, @selector(actionSheet:willDismissWithButtonIndex:)) ) {
+    if ( sel_isEqual(aSelector, @selector(actionSheet:clickedButtonAtIndex:)) ) {
         return !!self.clickedButtonAtIndexBlock;
-    } else if ( sel_isEqual(aSelector, @selector(actionSheet:willDismissWithButtonIndex:)) ) {
+    } else if ( sel_isEqual(aSelector, @selector(actionSheet:didDismissWithButtonIndex:)) ) {
         return !!self.didDismissWithButtonIndexBlock;
     } else if ( sel_isEqual(aSelector, @selector(actionSheet:willDismissWithButtonIndex:)) ) {
         return !!self.willDismissWithButtonIndexBlock;

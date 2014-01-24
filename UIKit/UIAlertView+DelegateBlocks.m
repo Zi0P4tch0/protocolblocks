@@ -31,34 +31,48 @@ static NSString* UIAlertViewDelegateBlocksKey = @"UIAlertViewDelegateBlocksKey";
 @implementation UIAlertView (DelegateBlocks)
 
 -(id)useBlocksForDelegate {
-    UIAlertViewDelegateBlocks* delegate = [[UIAlertViewDelegateBlocks alloc] init];
-    objc_setAssociatedObject (self, &UIAlertViewDelegateBlocksKey, delegate, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
-    self.delegate = delegate;
+    self.delegate = [self blockDelegate];
     return self;
 }
 
+-(id)blockDelegate {
+    id blockDelegate = objc_getAssociatedObject(self, &UIAlertViewDelegateBlocksKey);
+    if (!blockDelegate) {
+        UIAlertViewDelegateBlocks* delegate = [[UIAlertViewDelegateBlocks alloc] init];
+        blockDelegate = delegate;
+        objc_setAssociatedObject (self, &UIAlertViewDelegateBlocksKey, delegate, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    return blockDelegate;
+}
+
 -(void)onClickedButtonAtIndex:(UIAlertViewClickedButtonAtIndexBlock)block {
-    [((UIAlertViewDelegateBlocks*)self.delegate) setClickedButtonAtIndexBlock:block];
+    [((UIAlertViewDelegateBlocks*)[self blockDelegate]) setClickedButtonAtIndexBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onDidDismissWithButtonIndex:(UIAlertViewDidDismissWithButtonIndexBlock)block {
-    [((UIAlertViewDelegateBlocks*)self.delegate) setDidDismissWithButtonIndexBlock:block];
+    [((UIAlertViewDelegateBlocks*)[self blockDelegate]) setDidDismissWithButtonIndexBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onWillDismissWithButtonIndex:(UIAlertViewWillDismissWithButtonIndexBlock)block {
-    [((UIAlertViewDelegateBlocks*)self.delegate) setWillDismissWithButtonIndexBlock:block];
+    [((UIAlertViewDelegateBlocks*)[self blockDelegate]) setWillDismissWithButtonIndexBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onCancel:(UIAlertViewCancelBlock)block {
-    [((UIAlertViewDelegateBlocks*)self.delegate) setCancelBlock:block];
+    [((UIAlertViewDelegateBlocks*)[self blockDelegate]) setCancelBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onDidPresentAlertView:(UIAlertViewDidPresentAlertViewBlock)block {
-    [((UIAlertViewDelegateBlocks*)self.delegate) setDidPresentAlertViewBlock:block];
+    [((UIAlertViewDelegateBlocks*)[self blockDelegate]) setDidPresentAlertViewBlock:block];
+    [self useBlocksForDelegate];
 }
 
 -(void)onWillPresentAlertView:(UIAlertViewWillPresentAlertViewBlock)block {
-    [((UIAlertViewDelegateBlocks*)self.delegate) setWillPresentAlertViewBlock:block];
+    [((UIAlertViewDelegateBlocks*)[self blockDelegate]) setWillPresentAlertViewBlock:block];
+    [self useBlocksForDelegate];
 }
 
 @end
